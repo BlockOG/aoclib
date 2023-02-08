@@ -1,0 +1,11 @@
+[package]
+name = "aocli-runner"
+version = "0.1.0"
+edition = "2021"
+description = "runner for Advent of Code solutions with aocli"
+repository = "https://github.com/scjqt/aoc-runner"
+
+[lib]
+name = "aoc"
+
+[dependencies]
