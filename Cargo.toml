@@ -1,9 +1,14 @@
 [package]
 name = "aocli-runner"
 version = "0.1.0"
+authors = ["Sam Collins <samc3259@gmail.com"]
 edition = "2021"
-description = "runner for Advent of Code solutions with aocli"
+description = "Runner for Advent of Code solutions with aocli"
+# documentation = "https://docs.rs/aocli-runner"
+readme = "README.md"
 repository = "https://github.com/scjqt/aoc-runner"
+license = "MIT"
+license-file = "LICENSE"
 
 [lib]
 name = "aoc"
