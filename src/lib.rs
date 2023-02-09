@@ -1,8 +1,16 @@
 use std::{env, fs, path::Path, time::Instant};
 
-type Input<'a> = &'a [String];
+type Input<'a> = &'a [&'a str];
 type Part<T> = fn(Input) -> T;
 
+/// A macro for running with [aocli](https://github.com/scjqt/aocli).
+///
+/// Inserts `fn main` and passes your part 1 and part 2 functions to the `aocli-runner` library where applicable.
+///
+/// - `aoc::parts!();` if neither part is implemented
+/// - `aoc::parts!(1);` if only part 1 is implemented (`fn part_1`)
+/// - `aoc::parts!(2);` if only part 2 is implemented (`fn part_2`)
+/// - `aoc::parts!(1, 2);` if both parts are implemented
 #[macro_export]
 macro_rules! parts {
     () => {
@@ -27,6 +35,11 @@ macro_rules! parts {
     };
 }
 
+/// The function that `aoc::parts!` inserts into `fn main`.
+///
+/// Runs one of the parts with one of the puzzle inputs, depending on the command line arguments passed.
+///
+/// Writes the puzzle answer and timing to files in `/data/[input]/[part]/out` so that `aocli` can read them.
 pub fn run<T1, T2>(part_1: Option<Part<T1>>, part_2: Option<Part<T2>>)
 where
     T1: ToString,
@@ -84,7 +97,7 @@ where
     if input.is_empty() {
         panic!("input file is empty");
     }
-    let input: Vec<_> = input.lines().map(|s| s.to_string()).collect();
+    let input: Vec<_> = input.lines().collect();
     let start = Instant::now();
     let answer = part_n(&input);
     let time = start.elapsed().as_nanos();
