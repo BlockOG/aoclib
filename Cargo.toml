@@ -8,7 +8,6 @@ description = "Runner for Advent of Code solutions with aocli"
 readme = "README.md"
 repository = "https://github.com/scjqt/aoc-runner"
 license = "MIT"
-license-file = "LICENSE"
 
 [lib]
 name = "aoc"
