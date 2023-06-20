@@ -3,9 +3,9 @@ use std::{env, fs, path::Path, time::Instant};
 type Input<'a> = &'a [&'a str];
 type Part<T> = fn(Input) -> T;
 
-/// A macro for running with [aocli](https://github.com/scjqt/aocli).
+/// A macro for running with [aocli](https://github.com/sncxyz/aocli).
 ///
-/// Inserts `fn main` and passes your part 1 and part 2 functions to the `aocli-runner` library where applicable.
+/// Inserts `fn main` and passes your part 1 and part 2 functions to the `aoclib` library where applicable.
 ///
 /// - `aoc::parts!();` if neither part is implemented
 /// - `aoc::parts!(1);` if only part 1 is implemented (`fn part_1`)
