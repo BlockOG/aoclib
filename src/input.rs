@@ -40,6 +40,7 @@ impl<'a> Input<'a> {
     }
 }
 
+/// An iterator over the lines of an `Input`.
 pub struct Lines<'a> {
     inner: slice::Iter<'a, &'a str>,
 }

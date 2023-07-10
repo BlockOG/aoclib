@@ -1,5 +1,10 @@
 use std::{fmt, marker::PhantomData, str::FromStr};
 
+/// Provides methods on `&str` for parsing.
+///
+/// Everything is expected to succeed, so many of this trait's methods will panic on failure.
+///
+/// `T: FromStrUnwrap` requires `T: FromStr, <T as FromStr>::Err: Debug`.
 pub trait Parse {
     fn parse_uw<T: FromStrUnwrap>(&self) -> T;
     fn idx(&self, index: usize) -> u8;
@@ -346,6 +351,7 @@ impl<'a, T: FromStrUnwrap> Iterator for UInts<'a, T> {
     }
 }
 
+/// Provides methods on iterators to reduce allocations and `.unwrap()` calls when success is assumed.
 pub trait IterUnwrap {
     type Item;
 
