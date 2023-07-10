@@ -1,6 +1,6 @@
 [package]
 name = "aoclib"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Sam Collins <samc3259@gmail.com>"]
 edition = "2021"
 description = "Runner for Advent of Code solutions with aocli"

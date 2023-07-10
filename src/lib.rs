@@ -1,6 +1,37 @@
+//! A library for running [Advent of Code](https://adventofcode.com) solutions using [aocli](https://github.com/sncxyz/aocli),
+//! and for parsing Advent of Code inputs.
+//!
+//! # Examples
+//! ```
+//! use aoc::Parse;
+//!
+//! let line_1 = "first: 85, then: +192, finally: -64";
+//! let line_2 = "first: -157, then: 4, finally: 1000";
+//!
+//! fn parse_line(line: &str) -> [i32; 3] {
+//!     let mut parser = line.as_parser();
+//!     [
+//!         parser.between("first: ", ", "),
+//!         parser.between("then: ", ", "),
+//!         parser.after("finally: "),
+//!     ]
+//!     .map(Parse::parse_uw)
+//! }
+//!
+//! assert_eq!(line_1.ints::<3, i32>(), [85, 192, -64]);
+//! assert_eq!(parse_line(line_1), [85, 192, -64]);
+//!
+//! assert_eq!(line_2.ints::<3, i32>(), [-157, 4, 1000]);
+//! assert_eq!(parse_line(line_2), [-157, 4, 1000]);
+//! ```
+mod input;
+mod parse;
+
 use std::{env, fs, path::Path, time::Instant};
 
-type Input<'a> = &'a [&'a str];
+pub use input::{Input, Lines};
+pub use parse::{Ints, IterUnwrap, Parse, Parser, UInts};
+
 type Part<T> = fn(Input) -> T;
 
 /// A macro for running with [aocli](https://github.com/sncxyz/aocli).
@@ -97,9 +128,10 @@ where
     if input.is_empty() {
         panic!("input file is empty");
     }
-    let input: Vec<_> = input.lines().collect();
+    let lines: Vec<_> = input.lines().collect();
+    let input = Input::new(input, &lines);
     let start = Instant::now();
-    let answer = part_n(&input);
+    let answer = part_n(input);
     let time = start.elapsed().as_nanos();
     let answer = answer.to_string();
     fs::write(out_path.join("answer"), answer).unwrap();
