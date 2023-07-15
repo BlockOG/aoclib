@@ -265,6 +265,207 @@ impl Parse for str {
     }
 }
 
+impl<S> Parse for S
+where
+    S: AsRef<str>,
+{
+    /// Short for `.parse::<T>().unwrap()`.
+    ///
+    /// Requires that `T: FromStr` and `<T as FromStr>::Err: Debug`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "-205";
+    ///
+    /// assert_eq!(s.parse_uw::<i32>(), -205);
+    /// ```
+    fn parse_uw<T: FromStrUnwrap>(&self) -> T {
+        self.as_ref().parse_uw()
+    }
+
+    /// Returns the byte at the given index of `self`.
+    ///
+    /// Useful when `self` is an ASCII string slice.
+    ///
+    /// Panics when the index is at least the length of `self`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "hello, world!";
+    ///
+    /// assert_eq!(s.idx(0), b'h');
+    /// assert_eq!(s.idx(7), b'w');
+    /// ```
+    fn idx(&self, index: usize) -> u8 {
+        self.as_ref().idx(index)
+    }
+
+    /// Returns an iterator over the signed integers in `self`, parsed into type `T`.
+    ///
+    /// Examples of signed integers include `"1"`, `"-2"` and `"+3"`, but not `"++4"`, `"-+5"` or `"--6"`.
+    /// In the latter cases, all but the last sign will be ignored.
+    ///
+    /// `T` should generally be a signed integer type like `i32`. `T: FromStr` and `<T as FromStr>::Err: Debug` are required.
+    ///
+    /// The returned iterator will panic if it fails to parse an integer into `T`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "some signed integers: 15, -302 and +45.";
+    /// let mut ints = s.ints_iter::<i32>();
+    ///
+    /// assert_eq!(ints.next(), Some(15));
+    /// assert_eq!(ints.next(), Some(-302));
+    /// assert_eq!(ints.next(), Some(45));
+    /// assert_eq!(ints.next(), None);
+    /// ```
+    fn ints_iter<'a, T: FromStrUnwrap>(&'a self) -> Ints<'a, T> {
+        self.as_ref().ints_iter()
+    }
+
+    /// Returns an array of the first `N` signed integers in `self`, parsed into type `T`.
+    ///
+    /// Short for `.ints_iter::<T>().collect_n::<N>()`.
+    ///
+    /// Examples of signed integers include `"1"`, `"-2"` and `"+3"`, but not `"++4"`, `"-+5"` or `"--6"`.
+    /// In the latter cases, all but the last sign will be ignored.
+    ///
+    /// `T` should generally be a signed integer type like `i32`. `T: FromStr` and `<T as FromStr>::Err: Debug` are required.
+    ///
+    /// Panics if the iterator yields less than `N` items, or if it fails to parse an integer into `T`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "some signed integers: 15, -302 and +45.";
+    ///
+    /// assert_eq!(s.ints::<3, i32>(), [15, -302, 45]);
+    /// ```
+    fn ints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
+        self.as_ref().ints()
+    }
+
+    /// Returns an iterator over the unsigned integers in `self`, parsed into `T`.
+    ///
+    /// Examples of unsigned integers include `"1"` and `"2"`, but not `"-3"` or `"+4"`.
+    /// In the latter cases, the signs will be ignored.
+    ///
+    /// `T` should generally be an integer type like `u32`. `T: FromStr` and `<T as FromStr>::Err: Debug` are required.
+    ///
+    /// The returned iterator will panic if it fails to parse an integer into `T`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "some unsigned integers: 15, 302 and 45.";
+    /// let mut ints = s.uints_iter::<u32>();
+    ///
+    /// assert_eq!(ints.next(), Some(15));
+    /// assert_eq!(ints.next(), Some(302));
+    /// assert_eq!(ints.next(), Some(45));
+    /// assert_eq!(ints.next(), None);
+    /// ```
+    fn uints_iter<'a, T: FromStrUnwrap>(&'a self) -> UInts<'a, T> {
+        self.as_ref().uints_iter()
+    }
+
+    /// Returns an array of the first `N` unsigned integers in `self`, parsed into `T`.
+    ///
+    /// Short for `.uints_iter::<T>().collect_n::<N>()`.
+    ///
+    /// Examples of unsigned integers include `"1"` and `"2"`, but not `"-3"` or `"+4"`.
+    /// In the latter cases, the signs will be ignored.
+    ///
+    /// `T` should generally be an integer type like `u32`. `T: FromStr` and `<T as FromStr>::Err: Debug` are required.
+    ///
+    /// Panics if the iterator yields less than `N` items, or if it fails to parse an integer into `T`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "some unsigned integers: 15, 302 and 45.";
+    ///
+    /// assert_eq!(s.uints::<3, u32>(), [15, 302, 45]);
+    /// ```
+    fn uints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
+        self.as_ref().uints()
+    }
+
+    /// Returns the string slice between `pre` and `post` in `self`.
+    ///
+    /// More specifically, finds the first occurrence of `pre` in `self`, or returns `None` if it does not occur.
+    /// Then, finds the first occurrence of `post` after that, and returns the string slice between the two.
+    /// If `post` does not occur after `pre`, returns the string slice starting after `pre` until the end of `self`.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "ecl:gry pid:860033327 eyr:2020";
+    ///
+    /// assert_eq!(s.try_between("ecl:", " "), Some("gry"));
+    /// assert_eq!(s.try_between("pid:", " "), Some("860033327"));
+    /// assert_eq!(s.try_between("eyr:", " "), Some("2020"));
+    /// assert_eq!(s.try_between("cid:", " "), None);
+    /// ```
+    fn try_between(&self, pre: &str, post: &str) -> Option<&str> {
+        self.as_ref().try_between(pre, post)
+    }
+
+    /// Returns a struct for gradually parsing data from `self` from left to right.
+    ///
+    /// Each time a method is called on the struct, the processed portion of the string is "consumed",
+    /// and future method calls will only consider the remainder of the string.
+    ///
+    /// # Examples
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "move 10 from 271 to 3";
+    /// let mut parser = s.as_parser();
+    ///
+    /// assert_eq!(parser.between(" ", " "), "10");
+    /// assert_eq!(parser.between(" ", " "), "271");
+    /// assert_eq!(parser.after(" "), "3");
+    /// ```
+    /// Another way to do the same thing is:
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "move 10 from 271 to 3";
+    /// let mut parser = s.as_parser().skip(5);
+    ///
+    /// assert_eq!(parser.before(" "), "10");
+    /// parser.skip(5);
+    /// assert_eq!(parser.before(" "), "271");
+    /// parser.skip(3);
+    /// assert_eq!(parser.rest(), "3");
+    /// ```
+    /// Or alternatively:
+    /// ```
+    /// use aoc::Parse;
+    ///
+    /// let s = "move 10 from 271 to 3";
+    /// let mut parser = s.as_parser();
+    ///
+    /// assert_eq!(parser.between("move ", " "), "10");
+    /// assert_eq!(parser.between("from ", " "), "271");
+    /// assert_eq!(parser.after("to "), "3");
+    /// ```
+    fn as_parser<'a>(&'a self) -> Parser<'a> {
+        self.as_ref().as_parser()
+    }
+}
+
 pub trait FromStrUnwrap {
     fn parse(s: &str) -> Self;
 }
