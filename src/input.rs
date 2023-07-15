@@ -54,6 +54,12 @@ impl<'a> Iterator for Lines<'a> {
     }
 }
 
+impl<'a> DoubleEndedIterator for Lines<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.inner.next_back().copied()
+    }
+}
+
 impl<'a> IntoIterator for Input<'a> {
     type Item = &'a str;
     type IntoIter = Lines<'a>;
