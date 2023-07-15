@@ -60,6 +60,12 @@ impl<'a> DoubleEndedIterator for Lines<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for Lines<'a> {
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+}
+
 impl<'a> IntoIterator for Input<'a> {
     type Item = &'a str;
     type IntoIter = Lines<'a>;
