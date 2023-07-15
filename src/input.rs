@@ -1,4 +1,4 @@
-use std::{fmt, ops::Index, slice};
+use std::{fmt, iter, ops::Index, slice};
 
 /// A struct for handling and parsing an input for an Advent of Code problem.
 #[derive(Clone, Copy, Debug)]
@@ -41,6 +41,7 @@ impl<'a> Input<'a> {
 }
 
 /// An iterator over the lines of an `Input`.
+#[derive(Clone)]
 pub struct Lines<'a> {
     inner: slice::Iter<'a, &'a str>,
 }
@@ -65,6 +66,8 @@ impl<'a> ExactSizeIterator for Lines<'a> {
         self.inner.len()
     }
 }
+
+impl<'a> iter::FusedIterator for Lines<'a> {}
 
 impl<'a> IntoIterator for Input<'a> {
     type Item = &'a str;
