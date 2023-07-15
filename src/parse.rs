@@ -8,13 +8,13 @@ use std::{fmt, marker::PhantomData, str::FromStr};
 pub trait Parse {
     fn parse_uw<T: FromStrUnwrap>(&self) -> T;
     fn idx(&self, index: usize) -> u8;
-    fn ints_iter<'a, T: FromStrUnwrap>(&'a self) -> Ints<'a, T>;
+    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T>;
     fn ints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N];
-    fn uints_iter<'a, T: FromStrUnwrap>(&'a self) -> UInts<'a, T>;
+    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T>;
     fn uints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N];
     fn try_between(&self, pre: &str, post: &str) -> Option<&str>;
     // fn try_between_many(&self, pre: &str, post: &[&str]) -> Option<&str>;
-    fn as_parser<'a>(&'a self) -> Parser<'a>;
+    fn as_parser(&self) -> Parser;
 }
 
 impl Parse for str {
@@ -78,7 +78,7 @@ impl Parse for str {
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn ints_iter<'a, T: FromStrUnwrap>(&'a self) -> Ints<'a, T> {
+    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T> {
         Ints {
             s: self,
             _phantom: PhantomData,
@@ -131,7 +131,7 @@ impl Parse for str {
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn uints_iter<'a, T: FromStrUnwrap>(&'a self) -> UInts<'a, T> {
+    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T> {
         UInts {
             s: self,
             _phantom: PhantomData,
@@ -260,7 +260,7 @@ impl Parse for str {
     /// assert_eq!(parser.after("to "), "3");
     /// ```
     #[inline]
-    fn as_parser<'a>(&'a self) -> Parser<'a> {
+    fn as_parser(&self) -> Parser {
         Parser::new(self)
     }
 }
@@ -325,7 +325,7 @@ where
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn ints_iter<'a, T: FromStrUnwrap>(&'a self) -> Ints<'a, T> {
+    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T> {
         self.as_ref().ints_iter()
     }
 
@@ -373,7 +373,7 @@ where
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn uints_iter<'a, T: FromStrUnwrap>(&'a self) -> UInts<'a, T> {
+    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T> {
         self.as_ref().uints_iter()
     }
 
@@ -461,7 +461,7 @@ where
     /// assert_eq!(parser.between("from ", " "), "271");
     /// assert_eq!(parser.after("to "), "3");
     /// ```
-    fn as_parser<'a>(&'a self) -> Parser<'a> {
+    fn as_parser(&self) -> Parser {
         self.as_ref().as_parser()
     }
 }
@@ -722,7 +722,7 @@ impl<'a> Parser<'a> {
     /// ```
     #[inline]
     pub fn rest(self) -> &'a str {
-        &self.inner
+        self.inner
     }
 
     /// Returns the slice of the string before the first occurrence of `suffix`.
