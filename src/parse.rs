@@ -119,8 +119,10 @@ impl Parse for str {
     /// use aoc::Parse;
     ///
     /// let s = "some signed integers: 15, -302 and +45.";
+    /// let s2 = "42x432x1";
     ///
     /// assert_eq!(s.ints::<3, i32>(), [15, -302, 45]);
+    /// assert_eq!(s2.ints::<3, i32>(), [42, 432, 1]);
     /// ```
     #[inline]
     #[track_caller]
@@ -374,8 +376,10 @@ where
     /// use aoc::Parse;
     ///
     /// let s = "some signed integers: 15, -302 and +45.";
+    /// let s2 = "42x432x1";
     ///
     /// assert_eq!(s.ints::<3, i32>(), [15, -302, 45]);
+    /// assert_eq!(s2.ints::<3, i32>(), [42, 432, 1]);
     /// ```
     fn ints<
         const N: usize,
@@ -547,9 +551,11 @@ impl<
             let mut res = T2::default();
             let mut neg = false;
             let mut sign = false;
+            let mut num = false;
             for byte in s.by_ref() {
                 if byte.is_ascii_digit() {
                     res = res * T2::from(10) - T2::from(byte - b'0');
+                    num = true;
                     break;
                 } else if is_sign(byte) {
                     neg = byte == b'-';
@@ -567,6 +573,8 @@ impl<
                     }
                 }
                 res = res * T2::from(10) - T2::from(byte - b'0');
+            } else if num {
+                return Some(-res);
             } else {
                 return None;
             }
