@@ -547,7 +547,7 @@ impl<
             let mut res = T2::default();
             let mut neg = false;
             let mut sign = false;
-            while let Some(byte) = s.next() {
+            for byte in s.by_ref() {
                 if byte.is_ascii_digit() {
                     res = res * T2::from(10) - T2::from(byte - b'0');
                     break;
@@ -571,7 +571,7 @@ impl<
                 return None;
             }
 
-            while let Some(byte) = s.next() {
+            for byte in s.by_ref() {
                 if !byte.is_ascii_digit() {
                     break;
                 }
@@ -600,7 +600,7 @@ impl<T1: Iterator<Item = u8>, T2: Default + Add<Output = T2> + Mul<Output = T2> 
     fn next(&mut self) -> Option<Self::Item> {
         let s = &mut self.s;
         let mut res = T2::default();
-        while let Some(byte) = s.next() {
+        for byte in s.by_ref() {
             if byte.is_ascii_digit() {
                 res = res * T2::from(10) + T2::from(byte - b'0');
                 break;
@@ -616,7 +616,7 @@ impl<T1: Iterator<Item = u8>, T2: Default + Add<Output = T2> + Mul<Output = T2> 
             return None;
         }
 
-        while let Some(byte) = s.next() {
+        for byte in s.by_ref() {
             if !byte.is_ascii_digit() {
                 break;
             }
