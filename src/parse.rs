@@ -181,8 +181,10 @@ impl Parse for str {
     /// use aoc::Parse;
     ///
     /// let s = "some unsigned integers: 15, 302 and 45.";
+    /// let s2 = "   98  179    7";
     ///
     /// assert_eq!(s.uints::<3, u32>(), [15, 302, 45]);
+    /// assert_eq!(s2.ints::<3, i32>(), [98, 179, 7]);
     /// ```
     #[inline]
     #[track_caller]
@@ -433,8 +435,10 @@ where
     /// use aoc::Parse;
     ///
     /// let s = "some unsigned integers: 15, 302 and 45.";
+    /// let s2 = "   98  179    7";
     ///
     /// assert_eq!(s.uints::<3, u32>(), [15, 302, 45]);
+    /// assert_eq!(s2.ints::<3, i32>(), [98, 179, 7]);
     /// ```
     fn uints<const N: usize, T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
         &self,
@@ -608,9 +612,11 @@ impl<T1: Iterator<Item = u8>, T2: Default + Add<Output = T2> + Mul<Output = T2> 
     fn next(&mut self) -> Option<Self::Item> {
         let s = &mut self.s;
         let mut res = T2::default();
+        let mut num = false;
         for byte in s.by_ref() {
             if byte.is_ascii_digit() {
                 res = res * T2::from(10) + T2::from(byte - b'0');
+                num = true;
                 break;
             }
         }
@@ -620,6 +626,8 @@ impl<T1: Iterator<Item = u8>, T2: Default + Add<Output = T2> + Mul<Output = T2> 
                 return Some(res);
             }
             res = res * T2::from(10) + T2::from(byte - b'0');
+        } else if num {
+            return Some(res);
         } else {
             return None;
         }
