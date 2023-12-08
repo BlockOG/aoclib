@@ -1,4 +1,9 @@
-use std::{fmt, marker::PhantomData, str::FromStr};
+use std::{
+    fmt,
+    marker::PhantomData,
+    ops::{Add, Mul, Neg, Sub},
+    str::{Bytes, FromStr},
+};
 
 /// Provides methods on `&str` for parsing.
 ///
@@ -8,10 +13,21 @@ use std::{fmt, marker::PhantomData, str::FromStr};
 pub trait Parse {
     fn parse_uw<T: FromStrUnwrap>(&self) -> T;
     fn idx(&self, index: usize) -> u8;
-    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T>;
-    fn ints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N];
-    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T>;
-    fn uints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N];
+    fn ints_iter<T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> Ints<Bytes, T>;
+    fn ints<
+        const N: usize,
+        T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>,
+    >(
+        &self,
+    ) -> [T; N];
+    fn uints_iter<T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> UInts<Bytes, T>;
+    fn uints<const N: usize, T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> [T; N];
     fn try_between(&self, pre: &str, post: &str) -> Option<&str>;
     // fn try_between_many(&self, pre: &str, post: &[&str]) -> Option<&str>;
     fn as_parser(&self) -> Parser;
@@ -78,9 +94,11 @@ impl Parse for str {
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T> {
+    fn ints_iter<T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> Ints<Bytes, T> {
         Ints {
-            s: self,
+            s: self.bytes(),
             _phantom: PhantomData,
         }
     }
@@ -106,7 +124,12 @@ impl Parse for str {
     /// ```
     #[inline]
     #[track_caller]
-    fn ints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
+    fn ints<
+        const N: usize,
+        T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>,
+    >(
+        &self,
+    ) -> [T; N] {
         self.ints_iter().collect_n()
     }
 
@@ -131,9 +154,11 @@ impl Parse for str {
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T> {
+    fn uints_iter<T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> UInts<Bytes, T> {
         UInts {
-            s: self,
+            s: self.bytes(),
             _phantom: PhantomData,
         }
     }
@@ -159,8 +184,10 @@ impl Parse for str {
     /// ```
     #[inline]
     #[track_caller]
-    fn uints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
-        self.uints_iter().collect_n()
+    fn uints<const N: usize, T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> [T; N] {
+        self.uints_iter::<T>().collect_n()
     }
 
     /// Returns the string slice between `pre` and `post` in `self`.
@@ -325,7 +352,9 @@ where
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn ints_iter<T: FromStrUnwrap>(&self) -> Ints<T> {
+    fn ints_iter<T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> Ints<Bytes, T> {
         self.as_ref().ints_iter()
     }
 
@@ -348,7 +377,12 @@ where
     ///
     /// assert_eq!(s.ints::<3, i32>(), [15, -302, 45]);
     /// ```
-    fn ints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
+    fn ints<
+        const N: usize,
+        T: Default + Neg<Output = T> + Sub<Output = T> + Mul<Output = T> + From<u8>,
+    >(
+        &self,
+    ) -> [T; N] {
         self.as_ref().ints()
     }
 
@@ -373,7 +407,9 @@ where
     /// assert_eq!(ints.next(), Some(45));
     /// assert_eq!(ints.next(), None);
     /// ```
-    fn uints_iter<T: FromStrUnwrap>(&self) -> UInts<T> {
+    fn uints_iter<T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> UInts<Bytes, T> {
         self.as_ref().uints_iter()
     }
 
@@ -396,7 +432,9 @@ where
     ///
     /// assert_eq!(s.uints::<3, u32>(), [15, 302, 45]);
     /// ```
-    fn uints<const N: usize, T: FromStrUnwrap>(&self) -> [T; N] {
+    fn uints<const N: usize, T: Default + Add<Output = T> + Mul<Output = T> + From<u8>>(
+        &self,
+    ) -> [T; N] {
         self.as_ref().uints()
     }
 
@@ -486,38 +524,60 @@ where
 ///
 /// Panics if it fails to parse an integer into `T`.
 #[derive(Clone, Copy, Debug)]
-pub struct Ints<'a, T> {
-    s: &'a str,
-    _phantom: PhantomData<T>,
+pub struct Ints<T1, T2> {
+    s: T1,
+    _phantom: PhantomData<T2>,
 }
 
-impl<'a, T: FromStrUnwrap> Iterator for Ints<'a, T> {
-    type Item = T;
+impl<
+        T1: Iterator<Item = u8>,
+        T2: Default + Neg<Output = T2> + Sub<Output = T2> + Mul<Output = T2> + From<u8>,
+    > Iterator for Ints<T1, T2>
+{
+    type Item = T2;
 
     #[track_caller]
     fn next(&mut self) -> Option<Self::Item> {
-        fn is_digit_or_sign(ch: u8) -> bool {
-            ch.is_ascii_digit() || ch == b'-' || ch == b'+'
+        fn is_sign(ch: u8) -> bool {
+            ch == b'-' || ch == b'+'
         }
 
-        let (s, mut i) = (self.s, 0);
+        let s = &mut self.s;
         loop {
-            while i < s.len() && !is_digit_or_sign(s.idx(i)) {
-                i += 1;
+            let mut res = T2::default();
+            let mut neg = false;
+            let mut sign = false;
+            while let Some(byte) = s.next() {
+                if byte.is_ascii_digit() {
+                    res = res * T2::from(10) - T2::from(byte - b'0');
+                    break;
+                } else if is_sign(byte) {
+                    neg = byte == b'-';
+                    sign = true;
+                    break;
+                }
             }
-            if i >= s.len() {
+
+            if let Some(byte) = s.next() {
+                if !byte.is_ascii_digit() {
+                    if sign {
+                        continue;
+                    } else {
+                        return Some(-res);
+                    }
+                }
+                res = res * T2::from(10) - T2::from(byte - b'0');
+            } else {
                 return None;
             }
-            let mut j = i + 1;
-            while j < s.len() && s.idx(j).is_ascii_digit() {
-                j += 1;
+
+            while let Some(byte) = s.next() {
+                if !byte.is_ascii_digit() {
+                    break;
+                }
+                res = res * T2::from(10) - T2::from(byte - b'0');
             }
-            if !s.idx(j - 1).is_ascii_digit() {
-                i = j;
-                continue;
-            }
-            self.s = &s[j..];
-            return Some(s[i..j].parse_uw());
+            break Some(if neg { res } else { -res });
         }
     }
 }
@@ -526,29 +586,43 @@ impl<'a, T: FromStrUnwrap> Iterator for Ints<'a, T> {
 ///
 /// Panics if it fails to parse an integer into `T`.
 #[derive(Clone, Copy, Debug)]
-pub struct UInts<'a, T> {
-    s: &'a str,
-    _phantom: PhantomData<T>,
+pub struct UInts<T1, T2> {
+    s: T1,
+    _phantom: PhantomData<T2>,
 }
 
-impl<'a, T: FromStrUnwrap> Iterator for UInts<'a, T> {
-    type Item = T;
+impl<T1: Iterator<Item = u8>, T2: Default + Add<Output = T2> + Mul<Output = T2> + From<u8>> Iterator
+    for UInts<T1, T2>
+{
+    type Item = T2;
 
     #[track_caller]
     fn next(&mut self) -> Option<Self::Item> {
-        let (s, mut i) = (self.s, 0);
-        while i < s.len() && !s.idx(i).is_ascii_digit() {
-            i += 1;
+        let s = &mut self.s;
+        let mut res = T2::default();
+        while let Some(byte) = s.next() {
+            if byte.is_ascii_digit() {
+                res = res * T2::from(10) + T2::from(byte - b'0');
+                break;
+            }
         }
-        if i >= s.len() {
+
+        if let Some(byte) = s.next() {
+            if !byte.is_ascii_digit() {
+                return Some(res);
+            }
+            res = res * T2::from(10) + T2::from(byte - b'0');
+        } else {
             return None;
         }
-        let mut j = i + 1;
-        while j < s.len() && s.idx(j).is_ascii_digit() {
-            j += 1;
+
+        while let Some(byte) = s.next() {
+            if !byte.is_ascii_digit() {
+                break;
+            }
+            res = res * T2::from(10) + T2::from(byte - b'0');
         }
-        self.s = &s[j..];
-        Some(s[i..j].parse_uw())
+        Some(res)
     }
 }
 
