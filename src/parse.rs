@@ -686,20 +686,10 @@ where
     /// ```
     #[track_caller]
     fn collect_n<const N: usize>(&mut self) -> [Self::Item; N] {
-        if N <= 1000 {
-            let arr = [(); N].map(|_| self.next());
-            for res in &arr {
-                if res.is_none() {
-                    panic!("not enough elements in the iterator to fill the size `N` array")
-                }
-            }
-            arr.map(|x| x.unwrap())
-        } else {
-            [(); N].map(|_| {
-                self.next()
-                    .expect("not enough elements in the iterator to fill the size `N` array")
-            })
-        }
+        [(); N].map(|_| {
+            self.next()
+                .expect("not enough elements in the iterator to fill the size `N` array")
+        })
     }
 }
 
