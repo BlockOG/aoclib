@@ -77,7 +77,7 @@ where
     T2: ToString,
 {
     let args: Vec<_> = env::args().collect();
-    if args.len() != 3 {
+    if args.len() != 4 {
         panic!("incorrect number of arguments");
     }
     let data = args[1].as_str();
@@ -88,6 +88,13 @@ where
     let part = args[2].as_str();
     if part != "1" && part != "2" {
         panic!("invalid part argument");
+    }
+    let average = args[3]
+        .as_str()
+        .parse::<usize>()
+        .expect("invalid average argument");
+    if average == 0 {
+        panic!("invalid average argument");
     }
     let out_path = data_path.join(part).join("out");
     if out_path.try_exists().unwrap() {
@@ -105,18 +112,18 @@ where
             return;
         };
         implemented(&unimplemented_path);
-        run_part(&data_path, &out_path, part_1);
+        run_part(&data_path, &out_path, part_1, average);
     } else {
         let Some(part_2) = part_2 else {
             fs::write(unimplemented_path, "").unwrap();
             return;
         };
         implemented(&unimplemented_path);
-        run_part(&data_path, &out_path, part_2);
+        run_part(&data_path, &out_path, part_2, average);
     }
 }
 
-fn run_part<T>(data_path: &Path, out_path: &Path, part_n: Part<T>)
+fn run_part<T>(data_path: &Path, out_path: &Path, part_n: Part<T>, average: usize)
 where
     T: ToString,
 {
@@ -128,14 +135,31 @@ where
     if input.is_empty() {
         panic!("input file is empty");
     }
-    let lines: Vec<_> = input.lines().collect();
-    let input = Input::new(input, &lines);
-    let start = Instant::now();
-    let answer = part_n(input);
-    let time = start.elapsed().as_nanos();
-    let answer = answer.to_string();
-    fs::write(out_path.join("answer"), answer).unwrap();
-    fs::write(out_path.join("time"), time.to_string()).unwrap();
+
+    let mut answers = Vec::with_capacity(average);
+    let mut total_time = 0;
+
+    for _ in 0..average {
+        let lines: Vec<_> = input.lines().collect();
+        let input = Input::new(input, &lines);
+        let start = Instant::now();
+        let answer = part_n(input);
+        total_time += start.elapsed().as_nanos();
+        answers.push(answer);
+    }
+
+    let answers: Vec<_> = answers.into_iter().map(|i| i.to_string()).collect();
+    for two_answers in answers.windows(2) {
+        if two_answers[0] != two_answers[1] {
+            panic!("different answers");
+        }
+    }
+    fs::write(out_path.join("answer"), answers[0].clone()).unwrap();
+    fs::write(
+        out_path.join("time"),
+        (total_time / average as u128).to_string(),
+    )
+    .unwrap();
 }
 
 fn implemented(path: &Path) {
