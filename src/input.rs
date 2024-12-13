@@ -3,13 +3,24 @@ use std::{fmt, iter, ops::Index, slice};
 /// A struct for handling and parsing an input for an Advent of Code problem.
 #[derive(Clone, Copy, Debug)]
 pub struct Input<'a> {
+    raw_raw: &'a str,
     raw: &'a str,
     lines: &'a [&'a str],
 }
 
 impl<'a> Input<'a> {
-    pub(crate) fn new(raw: &'a str, lines: &'a [&'a str]) -> Self {
-        Self { raw, lines }
+    pub(crate) fn new(raw_raw: &'a str, raw: &'a str, lines: &'a [&'a str]) -> Self {
+        Self {
+            raw_raw,
+            raw,
+            lines,
+        }
+    }
+
+    /// Returns the actual raw input `&str`.
+    #[inline(always)]
+    pub fn raw_raw(self) -> &'a str {
+        self.raw_raw
     }
 
     /// Returns the raw input `&str`.

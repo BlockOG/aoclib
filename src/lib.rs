@@ -131,8 +131,8 @@ where
         panic!("no input file");
     }
     let input = fs::read_to_string(data_path).unwrap();
-    let input = input.trim_end();
-    if input.is_empty() {
+    let input_processed = input.trim_end();
+    if input_processed.is_empty() {
         panic!("input file is empty");
     }
 
@@ -140,8 +140,8 @@ where
     let mut total_time = 0;
 
     for _ in 0..average {
-        let lines: Vec<_> = input.lines().collect();
-        let input = Input::new(input, &lines);
+        let lines: Vec<_> = input_processed.lines().collect();
+        let input = Input::new(&input, input_processed, &lines);
         let start = Instant::now();
         let answer = part_n(input);
         total_time += start.elapsed().as_nanos();
