@@ -130,7 +130,7 @@ where
     if !data_path.is_file() {
         panic!("no input file");
     }
-    let input = fs::read_to_string(data_path).unwrap();
+    let input = fs::read_to_string(data_path).unwrap().replace("\r\n", "\n");
     let input_processed = input.trim_end();
     if input_processed.is_empty() {
         panic!("input file is empty");
